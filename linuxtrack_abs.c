@@ -11,11 +11,12 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
-#include <time.h> 
-
+#include <time.h>
+#include <signal.h>
 
 static float heading, pitch, roll, x, y, z;
 static unsigned int counter;
+int listenfd = 0, connfd = 0;
 
 bool intialize_tracking(void)
 {
@@ -42,10 +43,22 @@ bool intialize_tracking(void)
   return false;
 }
 
+void signal_callback_handler(int signum)
+{
+   printf("Caught signal %d\n",signum);
+   // Cleanup and close up stuff here
+   // Terminate program
+   close(connfd);
+   exit(signum);
+}
+
+
 int main(int argc, char *argv[])
 {
   (void) argc;
   (void) argv;
+  
+  signal(SIGINT, signal_callback_handler); 
   printf("Linuxtrack: Hello World!\n");
   int frames = 0;
   
@@ -53,7 +66,6 @@ int main(int argc, char *argv[])
     return 1;
   }
   
-  int listenfd = 0, connfd = 0;
   struct sockaddr_in serv_addr; 
 
   char sendBuff[1025];
@@ -65,7 +77,7 @@ int main(int argc, char *argv[])
 
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  serv_addr.sin_port = htons(5000); 
+  serv_addr.sin_port = htons(5001); 
 
   bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
@@ -73,8 +85,8 @@ int main(int argc, char *argv[])
   
   //do the tracking
   connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
-  while(frames < 500){ //100 frames ~ 10 seconds
-    
+  
+  while(true){ //100 frames ~ 10 seconds
     
     ticks = time(NULL);
     //snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
@@ -84,18 +96,10 @@ int main(int argc, char *argv[])
     }
     
     write(connfd, sendBuff, strlen(sendBuff)); 
-    //close(connfd);
     ++frames;
     
-    if(frames == 40){
-      //pause for a bit
-      linuxtrack_suspend();
-    }else if(frames == 70){
-      //resume
-      linuxtrack_wakeup();
-    }
     //here you'd do some usefull stuff
-    usleep(100000);
+    //usleep(100000);
   }
   
   //stop the tracker
