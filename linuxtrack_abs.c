@@ -46,9 +46,8 @@ bool intialize_tracking(void)
 void signal_callback_handler(int signum)
 {
    printf("Caught signal %d\n",signum);
-   // Cleanup and close up stuff here
-   // Terminate program
    close(connfd);
+   linuxtrack_shutdown();
    exit(signum);
 }
 
@@ -79,13 +78,18 @@ int main(int argc, char *argv[])
   serv_addr.sin_port = htons(5000); 
 
   bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
-
+  
   listen(listenfd, 10); 
   
-  //do the tracking
-  connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
   
+  //do the tracking
   while(true){ //100 frames ~ 10 seconds
+    
+    if( connfd == 0 ){
+      printf("waiting for connection\n");
+      connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+      printf("connected?\n");
+    }
     
     if(linuxtrack_get_abs_pose(&heading, &pitch, &roll, &x, &y, &z, &counter) > 0){
       printf("%f  %f  %f %f  %f  %f\n", heading, pitch, roll, x, y, z);
