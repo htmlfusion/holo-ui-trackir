@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  serv_addr.sin_port = htons(5001); 
+  serv_addr.sin_port = htons(5000); 
 
   bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
