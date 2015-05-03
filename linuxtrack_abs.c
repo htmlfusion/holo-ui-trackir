@@ -69,7 +69,6 @@ int main(int argc, char *argv[])
   struct sockaddr_in serv_addr; 
 
   char sendBuff[1025];
-  time_t ticks; 
 
   listenfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&serv_addr, '0', sizeof(serv_addr));
@@ -88,8 +87,6 @@ int main(int argc, char *argv[])
   
   while(true){ //100 frames ~ 10 seconds
     
-    ticks = time(NULL);
-    //snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
     if(linuxtrack_get_abs_pose(&heading, &pitch, &roll, &x, &y, &z, &counter) > 0){
       printf("%f  %f  %f %f  %f  %f\n", heading, pitch, roll, x, y, z);
       snprintf(sendBuff, sizeof(sendBuff), "%f  %f  %f %f  %f  %f\n", heading, pitch, roll, x, y, z);
@@ -98,8 +95,17 @@ int main(int argc, char *argv[])
     write(connfd, sendBuff, strlen(sendBuff)); 
     ++frames;
     
+    // if(frames == 40){
+    //   //pause for a bit
+    //   printf("Pausing for a bit\n");
+    //   linuxtrack_suspend();
+    // }else if(frames == 70){
+    //   //resume
+    //   printf("Waking up\n");
+    //   linuxtrack_wakeup();
+    // }
     //here you'd do some usefull stuff
-    //usleep(100000);
+    // usleep(100000);
   }
   
   //stop the tracker
